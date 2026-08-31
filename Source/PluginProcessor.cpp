@@ -14,16 +14,8 @@ DawNotesAudioProcessor::DawNotesAudioProcessor()
     )
 #endif
 {
-    // === DATENBANK INITIALISIERUNG ===
-    juce::File appDataDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-        .getChildFile("DAWNotes");
-
-    juce::File dbFile = appDataDir.getChildFile("daw_notes.db");
-
-    if (!dbManager.openDatabase(dbFile))
-    {
-        DBG("Fehler beim Öffnen der Datenbank!");
-    }
+    // dbManager oeffnet die Datenbank bereits in seinem eigenen Konstruktor
+    // (Standardpfad %APPDATA%/DAW Notes/daw_notes.db, siehe DatabaseManager::openDatabase()).
 }
 
 DawNotesAudioProcessor::~DawNotesAudioProcessor()
