@@ -94,12 +94,28 @@ void DatabaseManager::createTablesIfNotExist()
         "mood_name TEXT, "
         "PRIMARY KEY (song_id, mood_name));";
 
+    const char* sqlSongAnalyses =
+        "CREATE TABLE IF NOT EXISTS song_analyses ("
+        "song_id INTEGER PRIMARY KEY, "
+        "created_at INTEGER, "
+        "metrics TEXT);";
+
+    const char* sqlSongReferences =
+        "CREATE TABLE IF NOT EXISTS song_references ("
+        "song_id INTEGER PRIMARY KEY, "
+        "file_name TEXT, "
+        "created_at INTEGER, "
+        "metrics TEXT);";
+
     char* errMsg = nullptr;
     sqlite3_exec(db, sqlSongs, nullptr, nullptr, &errMsg);
     sqlite3_exec(db, sqlToDos, nullptr, nullptr, &errMsg);
     sqlite3_exec(db, sqlSongMoods, nullptr, nullptr, &errMsg);
     sqlite3_exec(db, sqlGlobalCustomMoods, nullptr, nullptr, &errMsg);
     sqlite3_exec(db, sqlSongCustomMoods, nullptr, nullptr, &errMsg);
+    sqlite3_exec(db, sqlSongAnalyses, nullptr, nullptr, &errMsg);
+    sqlite3_exec(db, sqlSongReferences, nullptr, nullptr, &errMsg);
+    sqlite3_exec(db, "ALTER TABLE song_references ADD COLUMN file_path TEXT;", nullptr, nullptr, nullptr);
 
     // Migration für bereits existierende Datenbanken
     const char* sqlAlterSongs = "ALTER TABLE songs ADD COLUMN chord_progression TEXT;";
@@ -253,6 +269,8 @@ bool DatabaseManager::deleteSong(int64_t songId)
 
     // Löscht alle ToDos dieses Songs. Die Einträge in anderen Songs bleiben erhalten!
     execDelete("DELETE FROM todos WHERE song_id = ?;");
+    execDelete("DELETE FROM song_analyses WHERE song_id = ?;");
+    execDelete("DELETE FROM song_references WHERE song_id = ?;");
 
     juce::String sql = "DELETE FROM songs WHERE id = ?;";
     sqlite3_stmt* stmt = nullptr;
@@ -688,4 +706,120 @@ bool DatabaseManager::deleteToDo(int64_t todoId)
     }
     sqlite3_finalize(stmt);
     return false;
+}
+
+// ==================== ANALYSE METHODS ====================
+
+bool DatabaseManager::saveAnalysis(int64_t songId, const juce::String& metricsJson)
+{
+    if (!db) return false;
+
+    const char* sql = "INSERT OR REPLACE INTO song_analyses (song_id, created_at, metrics) VALUES (?, ?, ?);";
+    sqlite3_stmt* stmt = nullptr;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK)
+    {
+        sqlite3_bind_int64(stmt, 1, songId);
+        sqlite3_bind_int64(stmt, 2, juce::Time::getCurrentTime().toMilliseconds());
+        sqlite3_bind_text(stmt, 3, metricsJson.toRawUTF8(), -1, SQLITE_TRANSIENT);
+
+        bool success = (sqlite3_step(stmt) == SQLITE_DONE);
+        sqlite3_finalize(stmt);
+        return success;
+    }
+    sqlite3_finalize(stmt);
+    return false;
+}
+
+juce::String DatabaseManager::loadAnalysis(int64_t songId, juce::Time& analysedAt)
+{
+    if (!db) return {};
+
+    const char* sql = "SELECT created_at, metrics FROM song_analyses WHERE song_id = ?;";
+    sqlite3_stmt* stmt = nullptr;
+    juce::String metricsJson;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK)
+    {
+        sqlite3_bind_int64(stmt, 1, songId);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            analysedAt = juce::Time(sqlite3_column_int64(stmt, 0));
+            auto textPtr = sqlite3_column_text(stmt, 1);
+            metricsJson = textPtr ? juce::String::fromUTF8((const char*)textPtr) : "";
+        }
+    }
+    sqlite3_finalize(stmt);
+    return metricsJson;
+}
+
+bool DatabaseManager::saveReference(int64_t songId, const juce::String& fileName, const juce::String& metricsJson,
+                                    const juce::String& filePath)
+{
+    if (!db) return false;
+
+    const char* sql = "INSERT OR REPLACE INTO song_references (song_id, file_name, created_at, metrics, file_path) VALUES (?, ?, ?, ?, ?);";
+    sqlite3_stmt* stmt = nullptr;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK)
+    {
+        sqlite3_bind_int64(stmt, 1, songId);
+        sqlite3_bind_text(stmt, 2, fileName.toRawUTF8(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int64(stmt, 3, juce::Time::getCurrentTime().toMilliseconds());
+        sqlite3_bind_text(stmt, 4, metricsJson.toRawUTF8(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 5, filePath.toRawUTF8(), -1, SQLITE_TRANSIENT);
+
+        bool success = (sqlite3_step(stmt) == SQLITE_DONE);
+        sqlite3_finalize(stmt);
+        return success;
+    }
+    sqlite3_finalize(stmt);
+    return false;
+}
+
+juce::String DatabaseManager::loadReference(int64_t songId, juce::String& fileName, juce::Time& analysedAt)
+{
+    if (!db) return {};
+
+    const char* sql = "SELECT file_name, created_at, metrics FROM song_references WHERE song_id = ?;";
+    sqlite3_stmt* stmt = nullptr;
+    juce::String metricsJson;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK)
+    {
+        sqlite3_bind_int64(stmt, 1, songId);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            auto namePtr = sqlite3_column_text(stmt, 0);
+            fileName = namePtr ? juce::String::fromUTF8((const char*)namePtr) : "";
+            analysedAt = juce::Time(sqlite3_column_int64(stmt, 1));
+            auto textPtr = sqlite3_column_text(stmt, 2);
+            metricsJson = textPtr ? juce::String::fromUTF8((const char*)textPtr) : "";
+        }
+    }
+    sqlite3_finalize(stmt);
+    return metricsJson;
+}
+
+juce::String DatabaseManager::loadReferencePath(int64_t songId)
+{
+    if (!db) return {};
+
+    const char* sql = "SELECT file_path FROM song_references WHERE song_id = ?;";
+    sqlite3_stmt* stmt = nullptr;
+    juce::String path;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK)
+    {
+        sqlite3_bind_int64(stmt, 1, songId);
+        if (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            auto textPtr = sqlite3_column_text(stmt, 0);
+            path = textPtr ? juce::String::fromUTF8((const char*)textPtr) : "";
+        }
+    }
+    sqlite3_finalize(stmt);
+    return path;
 }

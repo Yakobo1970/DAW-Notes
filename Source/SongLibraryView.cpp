@@ -39,7 +39,7 @@ SongLibraryView::SongLibraryView(DatabaseManager& dbManager,
 
     addSongButton.onClick = [this] {
         Song newSong;
-        newSong.title = juce::String::fromUTF8("Neuer Song");
+        newSong.title = tr("library_neuer_song", "Neuer Song");
         newSong.bpm = 120.0;
         newSong.key = "C Major";
         newSong.genre = "Pop";
@@ -208,9 +208,9 @@ void SongLibraryView::showContextMenu(int rowNumber)
     juce::PopupMenu menu;
     menu.addItem(1, settings.getText("ctx_load_open", juce::String::fromUTF8("Song laden & öffnen")));
     menu.addItem(2, settings.getText("btn_rename_song", juce::String::fromUTF8("Umbenennen")));
-    menu.addItem(3, settings.getText("btn_html_export", juce::String::fromUTF8("HTML / Sheet Export...")));
+    menu.addItem(3, settings.getText("ctx_html_export", juce::String::fromUTF8("HTML / Sheet Export...")));
     menu.addSeparator();
-    menu.addItem(4, settings.getText("btn_delete_song", juce::String::fromUTF8("Löschen...")));
+    menu.addItem(4, settings.getText("ctx_delete_song", juce::String::fromUTF8("Löschen...")));
 
     menu.showMenuAsync(juce::PopupMenu::Options(), [this, song](int result) {
         if (result == 1)
@@ -377,20 +377,20 @@ void SongLibraryView::generatePdfExport()
 
     // Header & Meta Info
     html << "<h1>" << song.title << "</h1>";
-    html << "<div style='color: #666; font-size: 12px;'>DAW Notes Studio Sheet &bull; Generiert am " << juce::Time::getCurrentTime().formatted("%d.%m.%Y %H:%M") << "</div>";
+    html << "<div style='color: #666; font-size: 12px;'>DAW Notes Studio Sheet &bull; " << tr("html_generated", "Generiert am") << " " << juce::Time::getCurrentTime().formatted("%d.%m.%Y %H:%M") << "</div>";
 
     html << "<div class='meta-grid'>"
-        << "<div class='meta-item'><span class='meta-label'>BPM:</span> " << (song.bpm > 0 ? juce::String(song.bpm, 1) : "-") << "</div>"
-        << "<div class='meta-item'><span class='meta-label'>Tonart:</span> " << (song.key.isNotEmpty() ? song.key : "-") << "</div>"
-        << "<div class='meta-item'><span class='meta-label'>Genre:</span> " << (song.genre.isNotEmpty() ? song.genre : "-") << "</div>"
-        << "<div class='meta-item'><span class='meta-label'>Referenz-Track:</span> " << (song.referenceTrack.isNotEmpty() ? song.referenceTrack : "-") << "</div>"
-        << "<div class='meta-item'><span class='meta-label'>Erstellt am:</span> " << song.createdAt.formatted("%d.%m.%Y") << "</div>"
+        << "<div class='meta-item'><span class='meta-label'>" << tr("html_bpm", "BPM:") << "</span> " << (song.bpm > 0 ? juce::String(song.bpm, 1) : "-") << "</div>"
+        << "<div class='meta-item'><span class='meta-label'>" << tr("html_key", "Tonart:") << "</span> " << (song.key.isNotEmpty() ? song.key : "-") << "</div>"
+        << "<div class='meta-item'><span class='meta-label'>" << tr("html_genre", "Genre:") << "</span> " << (song.genre.isNotEmpty() ? song.genre : "-") << "</div>"
+        << "<div class='meta-item'><span class='meta-label'>" << tr("html_reference", "Referenz-Track:") << "</span> " << (song.referenceTrack.isNotEmpty() ? song.referenceTrack : "-") << "</div>"
+        << "<div class='meta-item'><span class='meta-label'>" << tr("html_created", "Erstellt am:") << "</span> " << song.createdAt.formatted("%d.%m.%Y") << "</div>"
         << "</div>";
 
     // Moods Section
     if (!allMoods.isEmpty())
     {
-        html << "<h2>Moods & Vibe</h2><div style='margin-top: 10px;'>";
+        html << "<h2>" << tr("html_moods", "Moods & Vibe") << "</h2><div style='margin-top: 10px;'>";
         for (const auto& mood : allMoods)
         {
             html << "<span class='tag'>" << mood << "</span>";
@@ -401,15 +401,15 @@ void SongLibraryView::generatePdfExport()
     // Akkordfolge Section
     if (song.chordProgression.trim().isNotEmpty())
     {
-        html << "<h2>Akkordfolge / Harmonien</h2>";
+        html << "<h2>" << tr("html_chords", "Akkordfolge / Harmonien") << "</h2>";
         html << "<div class='chords-box'>" << song.chordProgression << "</div>";
     }
 
     // Session ToDos (Jetzt garantiert aus der Session-Liste!)
-    html << "<h2>Session To-Dos (" << sessionTodos.size() << ")</h2>";
+    html << "<h2>" << tr("html_session_todos", "Session To-Dos") << " (" << sessionTodos.size() << ")</h2>";
     if (sessionTodos.empty())
     {
-        html << "<p style='color: #777; font-size: 14px;'>Keine Session To-Dos vorhanden.</p>";
+        html << "<p style='color: #777; font-size: 14px;'>" << tr("html_no_session_todos", "Keine Session To-Dos vorhanden.") << "</p>";
     }
     else
     {
@@ -425,10 +425,10 @@ void SongLibraryView::generatePdfExport()
     }
 
     // Release ToDos (Jetzt garantiert aus der Release-Liste!)
-    html << "<h2>Release To-Dos (" << releaseTodos.size() << ")</h2>";
+    html << "<h2>" << tr("html_release_todos", "Release To-Dos") << " (" << releaseTodos.size() << ")</h2>";
     if (releaseTodos.empty())
     {
-        html << "<p style='color: #777; font-size: 14px;'>Keine Release To-Dos vorhanden.</p>";
+        html << "<p style='color: #777; font-size: 14px;'>" << tr("html_no_release_todos", "Keine Release To-Dos vorhanden.") << "</p>";
     }
     else
     {

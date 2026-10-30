@@ -39,5 +39,8 @@ private:
 
     void reloadDataFromDb();
 
+    // Öffnet Google Kalender mit einem vorausgefüllten Termin für dieses ToDo
+    void exportToGoogleCalendar(const ToDoItem& item);
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ToDoView)
 };

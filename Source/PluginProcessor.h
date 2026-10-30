@@ -2,6 +2,8 @@
 
 #include <JuceHeader.h>
 #include "DatabaseManager.h"
+#include "TrackAnalyser.h"
+#include "ReferencePlayer.h"
 
 class DawNotesAudioProcessor : public juce::AudioProcessor
 {
@@ -44,8 +46,13 @@ public:
     int64_t getActiveSongId() const { return activeSongId; }
     void setActiveSongId(int64_t newId) { activeSongId = newId; }
 
+    TrackAnalyser& getTrackAnalyser() { return trackAnalyser; }
+    ReferencePlayer& getReferencePlayer() { return referencePlayer; }
+
 private:
     DatabaseManager dbManager;
+    TrackAnalyser trackAnalyser;
+    ReferencePlayer referencePlayer;
     int64_t activeSongId = -1;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DawNotesAudioProcessor)

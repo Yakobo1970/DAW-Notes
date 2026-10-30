@@ -36,14 +36,26 @@ int DawNotesAudioProcessor::getCurrentProgram() { return 0; }
 void DawNotesAudioProcessor::setCurrentProgram(int index) {}
 const juce::String DawNotesAudioProcessor::getProgramName(int index) { return {}; }
 void DawNotesAudioProcessor::changeProgramName(int index, const juce::String& newName) {}
-void DawNotesAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {}
-void DawNotesAudioProcessor::releaseResources() {}
+void DawNotesAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+{
+    juce::ignoreUnused(samplesPerBlock);
+    trackAnalyser.prepare(sampleRate);
+    referencePlayer.prepare(sampleRate, samplesPerBlock);
+}
+void DawNotesAudioProcessor::releaseResources()
+{
+    referencePlayer.release();
+}
 
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool DawNotesAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
         && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        return false;
+
+    // Reines Durchreichen: Eingang muss dem Ausgang entsprechen
+    if (layouts.getMainInputChannelSet() != layouts.getMainOutputChannelSet())
         return false;
 
     return true;
@@ -58,6 +70,18 @@ void DawNotesAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
+
+    // Das Audio bleibt unverändert - DAW Notes hört für die Genre-Analyse nur mit
+    if (auto* hostPlayHead = getPlayHead())
+    {
+        if (auto position = hostPlayHead->getPosition())
+            trackAnalyser.setHostTransport(position->getIsPlaying(), position->getBpm().orFallback(0.0));
+    }
+
+    trackAnalyser.pushAudio(buffer);
+
+    // Referenztrack erst NACH dem Mithören beimischen, damit er die Analyse nicht verfälscht
+    referencePlayer.addTo(buffer);
 }
 
 bool DawNotesAudioProcessor::hasEditor() const { return true; }

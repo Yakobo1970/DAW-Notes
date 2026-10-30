@@ -4,6 +4,8 @@
 #include "PluginProcessor.h"
 #include "SongLibraryView.h"
 #include "SongVisionView.h"
+#include "AnalysisView.h"
+#include "AboutOverlay.h"
 #include "ToDoView.h"
 
 class DawNotesAudioProcessorEditor;
@@ -45,7 +47,6 @@ public:
 
     // Öffentlicher Zugriff für MainContentComponent (zum Zeichnen der GIFs)
     juce::Image headerGif;
-    juce::Image footerGif;
 
     // Damit PluginProcessor::setStateInformation() darauf zugreifen kann:
     void onSongSelected(int64_t songId);
@@ -59,12 +60,18 @@ private:
 
     std::unique_ptr<SongLibraryView> songLibraryView;
     std::unique_ptr<SongVisionView> songVisionView;
+    std::unique_ptr<AnalysisView> analysisView;
     std::unique_ptr<ToDoView> sessionToDoView;
     std::unique_ptr<ToDoView> releaseToDoView;
 
     juce::Label activeSongHeaderLabel;
     juce::TextEditor instructionBox;
     juce::HyperlinkButton openManualButton;
+    juce::TooltipWindow tooltipWindow{ this, 600 };
+
+    juce::TextButton aboutButton;
+    std::unique_ptr<AboutOverlay> aboutOverlay;
+    void showAbout();
 
     int64_t activeSongId = -1;
 

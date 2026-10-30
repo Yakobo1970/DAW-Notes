@@ -1,20 +1,51 @@
 #pragma execution_character_set("utf-8")
 
 #include "ToDoView.h"
+#include "SettingsManager.h"
+
+// Kleiner Button mit gezeichnetem Kalender-Symbol (unabhängig von Emoji-Schriften)
+class CalendarButton : public juce::Button
+{
+public:
+    CalendarButton() : juce::Button("calendar") {}
+
+    void paintButton(juce::Graphics& g, bool isMouseOver, bool isButtonDown) override
+    {
+        auto bounds = getLocalBounds().toFloat().reduced(2.0f);
+        g.setColour(isButtonDown ? juce::Colour(0xff2a4d7a) : isMouseOver ? juce::Colour(0xff35608f) : juce::Colour(0xff2b2b2b));
+        g.fillRoundedRectangle(bounds, 4.0f);
+
+        auto icon = bounds.withSizeKeepingCentre(16.0f, 15.0f).translated(0.0f, 0.5f);
+        g.setColour(juce::Colours::white);
+        g.drawRoundedRectangle(icon, 2.0f, 1.3f);
+        g.fillRect(icon.removeFromTop(4.0f));
+
+        // Aufhänger-Ringe
+        g.fillRect(bounds.getCentreX() - 4.5f, icon.getY() - 7.0f, 1.6f, 4.0f);
+        g.fillRect(bounds.getCentreX() + 3.0f, icon.getY() - 7.0f, 1.6f, 4.0f);
+
+        // Tages-Raster
+        for (int r = 0; r < 2; ++r)
+            for (int c = 0; c < 3; ++c)
+                g.fillRect(icon.getX() + 3.0f + c * 4.0f, icon.getY() + 2.0f + r * 4.0f, 2.0f, 2.0f);
+    }
+};
 
 ToDoView::ToDoView(DatabaseManager& dbManager, bool isReleaseType)
     : db(dbManager), isRelease(isReleaseType)
 {
-    table.getHeader().addColumn("Pin", 1, 40, 30, 50);
-    table.getHeader().addColumn("Status", 2, 80, 60, 100);
-    table.getHeader().addColumn("Aufgabe / ToDo", 3, 300, 150, 1000);
-    table.getHeader().addColumn("Erstellt am", 4, 130, 100, 160);
+    table.getHeader().addColumn(tr("col_pin", "Pin"), 1, 40, 30, 50);
+    table.getHeader().addColumn(tr("col_status", "Status"), 2, 80, 60, 100);
+    table.getHeader().addColumn(tr("col_task", "Aufgabe / ToDo"), 3, 300, 150, 1000);
+    table.getHeader().addColumn(tr("col_date", "Erstellt am"), 4, 130, 100, 160);
     table.getHeader().addColumn("", 5, 40, 40, 40);
+    table.getHeader().addColumn("", 6, 40, 40, 40);
 
     table.getHeader().setSortColumnId(1, true);
 
     addAndMakeVisible(table);
 
+    inputField.setTextToShowWhenEmpty(tr("todo_input_placeholder", "Neue Aufgabe … (Enter übernimmt)"), juce::Colour(0xff6a6a6a));
     inputField.onReturnKey = [this] { createNewToDoFromInput(); };
     addAndMakeVisible(inputField);
 }
@@ -172,7 +203,7 @@ juce::Component* ToDoView::refreshComponentForCell(int rowNumber, int columnId, 
         auto* btn = dynamic_cast<juce::TextButton*>(existingComponentToUpdate);
         if (!btn) btn = new juce::TextButton();
 
-        btn->setButtonText(item.isDone ? "Erledigt" : "Offen");
+        btn->setButtonText(item.isDone ? tr("todo_status_done", "Erledigt") : tr("todo_status_open", "Offen"));
         btn->setColour(juce::TextButton::buttonColourId, item.isDone ? juce::Colours::darkgreen : juce::Colours::darkred);
 
         btn->onClick = [this, item] {
@@ -189,6 +220,11 @@ juce::Component* ToDoView::refreshComponentForCell(int rowNumber, int columnId, 
         if (!editor) editor = new juce::TextEditor();
 
         editor->setText(item.text, juce::dontSendNotification);
+        // Liste sofort mitführen, damit z.B. der Google-Export den aktuellen Text sieht
+        editor->onTextChange = [this, id = item.id, editor] {
+            for (auto& t : todoList)
+                if (t.id == id) t.text = editor->getText();
+            };
         editor->onFocusLost = [this, item, editor] {
             if (editor->getText() != item.text)
             {
@@ -212,8 +248,120 @@ juce::Component* ToDoView::refreshComponentForCell(int rowNumber, int columnId, 
         return btn;
     }
 
+    // Spalte 6: In Google Kalender übertragen
+    if (columnId == 6)
+    {
+        auto* btn = dynamic_cast<CalendarButton*>(existingComponentToUpdate);
+        if (!btn)
+        {
+            delete existingComponentToUpdate;
+            btn = new CalendarButton();
+        }
+
+        btn->setTooltip(tr("todo_calendar_tooltip", "Als Google-Aufgabe oder -Termin übernehmen"));
+        btn->onClick = [this, id = item.id] {
+            for (const auto& t : todoList)
+                if (t.id == id)
+                {
+                    db.updateTodoText(t.id, t.text); // noch nicht gespeicherte Änderung sichern
+                    exportToGoogleCalendar(t);
+                    break;
+                }
+            };
+        return btn;
+    }
+
     delete existingComponentToUpdate;
     return nullptr;
+}
+
+void ToDoView::exportToGoogleCalendar(const ToDoItem& item)
+{
+    auto tomorrow = juce::Time::getCurrentTime() + juce::RelativeTime::days(1);
+
+    auto dialogWindow = std::make_shared<juce::AlertWindow>(
+        tr("calendar_title", "In Google übernehmen"),
+        tr("calendar_prompt", "\"%s\"\n\nAufgabe: Der Text wird in die Zwischenablage kopiert und Google Tasks geöffnet – dort mit Strg+V einfügen und Fälligkeit setzen.\nTermin: Google Kalender öffnet sich mit vorausgefülltem Termin zum gewählten Datum.").replace("%s", item.text),
+        juce::AlertWindow::QuestionIcon);
+
+    dialogWindow->addComboBox("kind", { tr("calendar_kind_task", "Aufgabe (Google Tasks)"), tr("calendar_kind_event", "Termin (Google Kalender)") },
+                              tr("calendar_kind_label", "Eintragen als:"));
+    dialogWindow->getComboBoxComponent("kind")->setSelectedItemIndex(0, juce::dontSendNotification);
+    dialogWindow->addTextEditor("date", tomorrow.formatted("%d.%m.%Y"), tr("calendar_date_label", "Datum (TT.MM.JJJJ):"));
+    dialogWindow->addTextEditor("time", "", tr("calendar_time_label", "Uhrzeit (HH:MM, leer = ganztägig):"));
+    dialogWindow->addButton(tr("calendar_btn_open", "Google öffnen"), 1);
+    dialogWindow->addButton(tr("calendar_btn_cancel", "Abbrechen"), 0);
+
+    dialogWindow->enterModalState(true, juce::ModalCallbackFunction::create([this, item, dialogWindow](int result) {
+        if (result != 1) return;
+
+        auto& set = SettingsManager::getInstance();
+
+        juce::String songTitle;
+        for (const auto& s : db.getAllSongs())
+            if (s.id == currentSongId) { songTitle = s.title; break; }
+
+        const juce::String title = songTitle.isNotEmpty() ? songTitle + ": " + item.text : item.text;
+
+        // Aufgabe: Google bietet dafür keinen vorausgefüllten Link -> Zwischenablage + Google Tasks öffnen
+        if (dialogWindow->getComboBoxComponent("kind")->getSelectedItemIndex() == 0)
+        {
+            juce::SystemClipboard::copyTextToClipboard(title);
+            juce::URL("https://tasks.google.com/tasks/").launchInDefaultBrowser();
+            return;
+        }
+
+        // Datum TT.MM.JJJJ prüfen
+        auto dateParts = juce::StringArray::fromTokens(dialogWindow->getTextEditorContents("date").trim(), ".", "");
+        int day = dateParts.size() == 3 ? dateParts[0].getIntValue() : 0;
+        int month = dateParts.size() == 3 ? dateParts[1].getIntValue() : 0;
+        int year = dateParts.size() == 3 ? dateParts[2].getIntValue() : 0;
+        if (year > 0 && year < 100) year += 2000;
+
+        juce::Time start(year, month - 1, day, 0, 0, 0, 0, true);
+        bool dateValid = year >= 1970 && start.getDayOfMonth() == day && start.getMonth() == month - 1;
+
+        // Uhrzeit HH:MM prüfen (optional)
+        juce::String timeText = dialogWindow->getTextEditorContents("time").trim();
+        bool allDay = timeText.isEmpty();
+        bool timeValid = true;
+
+        if (!allDay)
+        {
+            auto timeParts = juce::StringArray::fromTokens(timeText, ":.", "");
+            int hours = timeParts[0].getIntValue();
+            int minutes = timeParts.size() > 1 ? timeParts[1].getIntValue() : 0;
+            timeValid = timeParts.size() <= 2 && timeParts[0].containsOnly("0123456789") && hours < 24 && minutes < 60;
+            start = juce::Time(year, month - 1, day, hours, minutes, 0, 0, true);
+        }
+
+        if (!dateValid || !timeValid)
+        {
+            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon,
+                tr("calendar_invalid_title", "Ungültige Eingabe"),
+                tr("calendar_invalid_msg", "Bitte das Datum als TT.MM.JJJJ und die Uhrzeit als HH:MM angeben."));
+            return;
+        }
+
+        // Google erwartet ganztägig YYYYMMDD/YYYYMMDD (Ende exklusiv), sonst lokale Zeit ohne "Z"
+        juce::String dates = allDay
+            ? start.formatted("%Y%m%d") + "/" + (start + juce::RelativeTime::days(1)).formatted("%Y%m%d")
+            : start.formatted("%Y%m%dT%H%M00") + "/" + (start + juce::RelativeTime::hours(1)).formatted("%Y%m%dT%H%M00");
+
+        juce::String listName = isRelease ? set.getText("tab_release_todos", "Release ToDos")
+                                          : set.getText("tab_session_todos", "Session ToDos");
+
+        juce::String details = "Song: " + songTitle + "\n" + listName + "\n\n" + item.text
+            + "\n\n" + tr("calendar_details_footer", "Eingetragen mit DAW Notes");
+
+        juce::URL calendarUrl = juce::URL("https://calendar.google.com/calendar/render")
+            .withParameter("action", "TEMPLATE")
+            .withParameter("text", title)
+            .withParameter("dates", dates)
+            .withParameter("details", details);
+
+        calendarUrl.launchInDefaultBrowser();
+        }));
 }
 
 void ToDoView::paint(juce::Graphics& g)

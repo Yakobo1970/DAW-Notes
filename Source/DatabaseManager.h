@@ -55,6 +55,16 @@ public:
 
     bool deleteTodo(int64_t todoId) { return deleteToDo(todoId); }
 
+    // Analyse-Aktionen (letzte Genre-Analyse je Song als JSON)
+    bool saveAnalysis(int64_t songId, const juce::String& metricsJson);
+    juce::String loadAnalysis(int64_t songId, juce::Time& analysedAt);
+
+    // Referenztrack-Analyse je Song (Dateiname + Messwerte als JSON)
+    bool saveReference(int64_t songId, const juce::String& fileName, const juce::String& metricsJson,
+                       const juce::String& filePath = {});
+    juce::String loadReferencePath(int64_t songId);
+    juce::String loadReference(int64_t songId, juce::String& fileName, juce::Time& analysedAt);
+
 private:
     sqlite3* db = nullptr;
     void createTablesIfNotExist();

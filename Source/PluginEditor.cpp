@@ -26,15 +26,6 @@ void MainContentComponent::paint(juce::Graphics& g)
 
     g.setColour(juce::Colour(0xff333333));
     g.drawHorizontalLine(94, 0.0f, 850.0f);
-
-    // Footer GIF (fest eingepasst am Boden der 650px Basis-Koordinaten)
-    if (editor.footerGif.isValid())
-    {
-        g.drawImageWithin(editor.footerGif,
-            0, 650 - 40, 850, 40,
-            juce::RectanglePlacement::fillDestination,
-            false);
-    }
 }
 
 // ==============================================================================
@@ -62,22 +53,15 @@ DawNotesAudioProcessorEditor::DawNotesAudioProcessorEditor(DawNotesAudioProcesso
         dawDir.createDirectory();
 
     // 3.1 Header GIF entpacken/laden
+    // Unveränderte Standardgrafik aus Version 1.x (bunter Wirbel) durch die neue ersetzen, eigene Grafiken bleiben erhalten
     juce::File headerFile = dawDir.getChildFile("header_banner.gif");
-    if (!headerFile.existsAsFile())
+    if (!headerFile.existsAsFile()
+        || headerFile.getSize() == 79464) // exakte Größe der alten Standardgrafik
     {
         headerFile.replaceWithData(BinaryData::header_banner_gif, BinaryData::header_banner_gifSize);
     }
     if (headerFile.existsAsFile())
         headerGif = juce::ImageFileFormat::loadFrom(headerFile);
-
-    // 3.2 Footer GIF entpacken/laden
-    juce::File footerFile = dawDir.getChildFile("footer_banner.gif");
-    if (!footerFile.existsAsFile())
-    {
-        footerFile.replaceWithData(BinaryData::footer_banner_gif, BinaryData::footer_banner_gifSize);
-    }
-    if (footerFile.existsAsFile())
-        footerGif = juce::ImageFileFormat::loadFrom(footerFile);
 
     auto& settings = SettingsManager::getInstance();
 
@@ -102,7 +86,7 @@ DawNotesAudioProcessorEditor::DawNotesAudioProcessorEditor(DawNotesAudioProcesso
     contentComponent.addAndMakeVisible(instructionBox);
 
     // 5.1. Button für detaillierte PDF-Anleitung einrichten
-    openManualButton.setButtonText(juce::String::fromUTF8("📄 Detaillierte Anleitung (PDF) öffnen"));
+    openManualButton.setButtonText(tr("editor_detaillierte_anleitung_pdf_oeffnen", "📄 Detaillierte Anleitung (PDF) öffnen"));
     openManualButton.setFont(juce::Font(12.0f, juce::Font::underlined), false);
     openManualButton.setColour(juce::HyperlinkButton::textColourId, juce::Colours::orange);
     openManualButton.onClick = [this]() { openManualPdf(); };
@@ -125,13 +109,16 @@ DawNotesAudioProcessorEditor::DawNotesAudioProcessorEditor(DawNotesAudioProcesso
         }
     );
 
-    songVisionView = std::make_unique<SongVisionView>(audioProcessor.getDbManager());
+    songVisionView = std::make_unique<SongVisionView>(audioProcessor.getDbManager(), audioProcessor.getReferencePlayer());
+    analysisView = std::make_unique<AnalysisView>(audioProcessor.getDbManager(), audioProcessor.getTrackAnalyser(),
+        [this]() { if (sessionToDoView) sessionToDoView->loadToDosForSong(activeSongId); });
     sessionToDoView = std::make_unique<ToDoView>(audioProcessor.getDbManager(), false);
     releaseToDoView = std::make_unique<ToDoView>(audioProcessor.getDbManager(), true);
 
     // 7. Tabs hinzufügen (An contentComponent hängen!)
     tabs.addTab(settings.getText("tab_library", "Library"), juce::Colour(0xff222222), songLibraryView.get(), false);
     tabs.addTab(settings.getText("tab_vision", "Song Vision"), juce::Colour(0xff222222), songVisionView.get(), false);
+    tabs.addTab(settings.getText("tab_analysis", "Analyse"), juce::Colour(0xff222222), analysisView.get(), false);
     tabs.addTab(settings.getText("tab_session_todos", "Session ToDos"), juce::Colour(0xff222222), sessionToDoView.get(), false);
     tabs.addTab(settings.getText("tab_release_todos", "Release ToDos"), juce::Colour(0xff222222), releaseToDoView.get(), false);
 
@@ -142,10 +129,25 @@ DawNotesAudioProcessorEditor::DawNotesAudioProcessorEditor(DawNotesAudioProcesso
         if (newIndex == 0 && songLibraryView != nullptr)
             songLibraryView->refreshSongList();
 
+        // Genre/BPM/Tonart können sich in der Song Vision gerade geändert haben
+        if (newIndex == 2 && analysisView != nullptr)
+            analysisView->loadSong(activeSongId);
+
+        // Nach einer neuen Analyse die Diagnose in der Song Vision aktualisieren
+        if (newIndex == 1 && songVisionView != nullptr)
+            songVisionView->refreshDiagnosis();
+
         updateInstructionText(newIndex);
         };
 
     contentComponent.addAndMakeVisible(tabs);
+
+    // "Über DAW Notes" rechts außen in der Reiterleiste (nach den Tabs hinzugefügt, liegt damit obenauf)
+    aboutButton.setButtonText(settings.getText("btn_about", juce::String::fromUTF8("Über DAW Notes")));
+    aboutButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff2b2b2b));
+    aboutButton.setColour(juce::TextButton::textColourOffId, juce::Colours::orange);
+    aboutButton.onClick = [this] { showAbout(); };
+    contentComponent.addAndMakeVisible(aboutButton);
     updateTabEnableState();
 
     updateInstructionText(0);
@@ -159,6 +161,22 @@ DawNotesAudioProcessorEditor::~DawNotesAudioProcessorEditor()
     tabs.clearTabs();
 }
 
+void DawNotesAudioProcessorEditor::showAbout()
+{
+    if (aboutOverlay != nullptr) return;
+
+    aboutOverlay = std::make_unique<AboutOverlay>();
+    aboutOverlay->onClose = [this] {
+        // Erst nach dem Klick-Handler zerstören
+        juce::MessageManager::callAsync([safe = juce::Component::SafePointer<DawNotesAudioProcessorEditor>(this)] {
+            if (safe != nullptr) safe->aboutOverlay.reset();
+        });
+    };
+    contentComponent.addAndMakeVisible(*aboutOverlay);
+    aboutOverlay->setBounds(0, 0, 850, 650);
+    aboutOverlay->grabKeyboardFocus();
+}
+
 void DawNotesAudioProcessorEditor::openManualPdf()
 {
     auto appDataDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
@@ -169,7 +187,8 @@ void DawNotesAudioProcessorEditor::openManualPdf()
 
     juce::File pdfFile = appDataDir.getChildFile("Anleitung.pdf");
 
-    if (!pdfFile.existsAsFile())
+    // Nach einem Update die mitgelieferte (neuere) Anleitung ausliefern
+    if (!pdfFile.existsAsFile() || pdfFile.getSize() != (juce::int64)BinaryData::Anleitung_pdfSize)
     {
         pdfFile.replaceWithData(BinaryData::Anleitung_pdf, BinaryData::Anleitung_pdfSize);
     }
@@ -191,12 +210,15 @@ void DawNotesAudioProcessorEditor::updateInstructionText(int tabIndex)
         text = settings.getText("help_library", juce::String::fromUTF8("LIBRARY:\n• Wähle einen Song aus der Liste, um ihn zu bearbeiten.\n• Nutze 'Neuer Song', um ein neues Projekt hinzuzufügen."));
         break;
     case 1:
-        text = settings.getText("help_vision", juce::String::fromUTF8("SONG VISION:\n• Halte deine Ideen, Stimmung und Referenztracks fest.\n• Nutze Keywords/Moods zur Kategorisierung."));
+        text = settings.getText("help_vision", juce::String::fromUTF8("SONG VISION:\n• Halte deine Ideen, Stimmung und Referenztracks fest.\n• \"Analysieren …\" erkennt Tempo, Tonart, Akkorde und Moods eines Referenztracks."));
         break;
     case 2:
-        text = settings.getText("help_session_todos", juce::String::fromUTF8("SESSION TO-DOS:\n• Aufgaben für die aktuelle Recording-/Mixing-Session.\n• Mit 'Pin' bleiben ToDos für ALLE Songs sichtbar."));
+        text = settings.getText("help_analysis", juce::String::fromUTF8("ANALYSE:\n• DAW Notes auf den Master-Bus legen, 'Analyse' drücken und den kompletten Song abspielen.\n• Der Track wird mit typischen Werten des Genres aus der Song Vision verglichen."));
         break;
     case 3:
+        text = settings.getText("help_session_todos", juce::String::fromUTF8("SESSION TO-DOS:\n• Aufgaben für die aktuelle Recording-/Mixing-Session.\n• Mit 'Pin' bleiben ToDos für ALLE Songs sichtbar."));
+        break;
+    case 4:
         text = settings.getText("help_release_todos", juce::String::fromUTF8("RELEASE TO-DOS:\n• Checkliste für Master, Artwork, Distribution & Promotion.\n• Klicke auf die Spaltenköpfe, um zu sortieren."));
         break;
     default:
@@ -231,6 +253,7 @@ void DawNotesAudioProcessorEditor::onSongSelected(int64_t songId)
         }
 
         if (songVisionView)   songVisionView->loadSong(activeSongId);
+        if (analysisView)     analysisView->loadSong(activeSongId);
         if (sessionToDoView) sessionToDoView->loadToDosForSong(activeSongId);
         if (releaseToDoView) releaseToDoView->loadToDosForSong(activeSongId);
     }
@@ -289,12 +312,16 @@ void DawNotesAudioProcessorEditor::resized()
     auto songLabelArea = area.removeFromTop(34).reduced(10, 2);
     activeSongHeaderLabel.setBounds(songLabelArea);
 
-    area.removeFromBottom(40); // Footer GIF Platz
-
     // Unteren Hilfebereich (85px) in Kurzanleitung + PDF-Link-Button aufteilen
     auto bottomHelpArea = area.removeFromBottom(85).reduced(10, 2);
     openManualButton.setBounds(bottomHelpArea.removeFromBottom(18));
     instructionBox.setBounds(bottomHelpArea);
 
     tabs.setBounds(area);
+
+    const int tabBarDepth = tabs.getTabBarDepth();
+    aboutButton.setBounds(area.getRight() - 132, area.getY() + 3, 128, tabBarDepth - 6);
+
+    if (aboutOverlay != nullptr)
+        aboutOverlay->setBounds(0, 0, 850, 650);
 }

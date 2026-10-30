@@ -9,7 +9,7 @@
 namespace BinaryData
 {
     extern const char*   Anleitung_pdf;
-    const int            Anleitung_pdfSize = 1118500;
+    const int            Anleitung_pdfSize = 1420609;
 
     extern const char*   dawnotes_png;
     const int            dawnotes_pngSize = 145999;
@@ -17,11 +17,11 @@ namespace BinaryData
     extern const char*   dawnnotes_ico;
     const int            dawnnotes_icoSize = 4286;
 
-    extern const char*   footer_banner_gif;
-    const int            footer_banner_gifSize = 67581;
-
     extern const char*   header_banner_gif;
-    const int            header_banner_gifSize = 79464;
+    const int            header_banner_gifSize = 127257;
+
+    extern const char*   set_german_ini;
+    const int            set_german_iniSize = 18729;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
     const int namedResourceListSize = 5;

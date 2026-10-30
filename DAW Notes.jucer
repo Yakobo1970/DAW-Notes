@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="zLCsAN" name="DAW Notes" projectType="audioplug" useAppConfig="0"
+<JUCERPROJECT id="zLCsAN" name="DAW Notes" version="2.0.0" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" bundleIdentifier="de.undabtanzbar.DAWNotes"
               pluginFormats="buildAU,buildStandalone,buildVST3" pluginDesc="Notizblock f&#252;r DAW-User"
-              pluginManufacturer="undabtanzbar" pluginVST3Category="Tools"
+              pluginManufacturer="undabtanzbar" pluginVST3Category="Analyzer,Tools"
               lv2Uri="www.undabtanzbar,de/plugins/DAWNotes" cppLanguageStandard="latest"
               companyWebsite="www.undabtanzbar.de" companyName="Un(d)AbtanzBAR"
-              pluginChannelConfigs="{0, 0}" defines="JUCE_STANDALONE_FILTER_WINDOW_USE_PLUGIN_AUDIO_PROCESSOR_METHODS=1">
+              defines="JUCE_STANDALONE_FILTER_WINDOW_USE_PLUGIN_AUDIO_PROCESSOR_METHODS=1">
   <MAINGROUP id="Jl10OJ" name="DAW Notes">
     <GROUP id="{BE6D641F-E1DA-BF7C-3828-7D2F56583A80}" name="Source">
-      <FILE id="JEp67A" name="Anleitung.pdf" compile="0" resource="1" file="../Anleitung.pdf"/>
-      <FILE id="wVIUWY" name="dawnotes.png" compile="0" resource="1" file="../dawnotes.png"/>
-      <FILE id="AOr2JM" name="dawnnotes.ico" compile="0" resource="1" file="../dawnnotes.ico"/>
-      <FILE id="r95aBN" name="footer_banner.gif" compile="0" resource="1"
-            file="../footer_banner.gif"/>
+      <FILE id="JEp67A" name="Anleitung.pdf" compile="0" resource="1" file="Resources/Anleitung.pdf"/>
+      <FILE id="wVIUWY" name="dawnotes.png" compile="0" resource="1" file="Resources/dawnotes.png"/>
+      <FILE id="AOr2JM" name="dawnnotes.ico" compile="0" resource="1" file="Resources/dawnnotes.ico"/>
       <FILE id="OgCmoQ" name="header_banner.gif" compile="0" resource="1"
-            file="../header_banner.gif"/>
+            file="Resources/header_banner.gif"/>
       <FILE id="Xarsi0" name="SongLibraryView.cpp" compile="1" resource="0"
             file="Source/SongLibraryView.cpp"/>
       <FILE id="Pq06YV" name="SettingsManager.h" compile="0" resource="0"
@@ -44,6 +42,21 @@
       <FILE id="shdrol" name="sqlite3ext.h" compile="0" resource="0" file="Source/sqlite3ext.h"/>
       <FILE id="IQRcjC" name="SongVisionView.h" compile="0" resource="0"
             file="Source/SongVisionView.h"/>
+      <FILE id="Kq3aZ1" name="TrackAnalyser.cpp" compile="1" resource="0" file="Source/TrackAnalyser.cpp"/>
+      <FILE id="Kq3aZ2" name="TrackAnalyser.h" compile="0" resource="0" file="Source/TrackAnalyser.h"/>
+      <FILE id="Kq3aZ3" name="GenreAnalysis.cpp" compile="1" resource="0" file="Source/GenreAnalysis.cpp"/>
+      <FILE id="Kq3aZ4" name="GenreAnalysis.h" compile="0" resource="0" file="Source/GenreAnalysis.h"/>
+      <FILE id="Kq3aZ5" name="AnalysisView.cpp" compile="1" resource="0" file="Source/AnalysisView.cpp"/>
+      <FILE id="Kq3aZ6" name="AnalysisView.h" compile="0" resource="0" file="Source/AnalysisView.h"/>
+      <FILE id="Kq3aZ7" name="AboutOverlay.cpp" compile="1" resource="0" file="Source/AboutOverlay.cpp"/>
+      <FILE id="Kq3aZ8" name="AboutOverlay.h" compile="0" resource="0" file="Source/AboutOverlay.h"/>
+      <FILE id="Kq3aZ9" name="GhostArrangement.cpp" compile="1" resource="0" file="Source/GhostArrangement.cpp"/>
+      <FILE id="Kq3aZA" name="GhostArrangement.h" compile="0" resource="0" file="Source/GhostArrangement.h"/>
+      <FILE id="Kq3aZ9" name="set_german.ini" compile="0" resource="1" file="Resources/Languages/set_german.ini"/>
+      <FILE id="Rp1aZ1" name="ReferencePlayer.cpp" compile="1" resource="0" file="Source/ReferencePlayer.cpp"/>
+      <FILE id="Rp1aZ2" name="ReferencePlayer.h" compile="0" resource="0" file="Source/ReferencePlayer.h"/>
+      <FILE id="Rp1aZ3" name="ReferencePlayerControls.cpp" compile="1" resource="0" file="Source/ReferencePlayerControls.cpp"/>
+      <FILE id="Rp1aZ4" name="ReferencePlayerControls.h" compile="0" resource="0" file="Source/ReferencePlayerControls.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
@@ -58,12 +71,14 @@
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
   </MODULES>
-  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0" JUCE_USE_MP3AUDIOFORMAT="1"
+               JUCE_USE_WINDOWS_MEDIA_FORMAT="1"/>
   <EXPORTFORMATS>
     <VS2026 targetFolder="Builds/VisualStudio2026" extraCompilerFlags="/utf-8"
             bigIcon="wVIUWY" smallIcon="wVIUWY">
@@ -81,6 +96,7 @@
         <MODULEPATH id="juce_audio_utils" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_core" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_data_structures" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_events" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
