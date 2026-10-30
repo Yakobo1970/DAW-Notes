@@ -11,6 +11,8 @@ DAW Notes does not access any data from the DAW and is located locally on your s
 
 ## What's new in 2.0.0
 
+![Song Vision](docs/screenshots/daw-notes-2-song-vision.png)
+
 - **Analysis tab:** press *Analyse*, play your whole song once while DAW Notes listens, and get a genre fit (loudness, dynamics, stereo width, tonal balance, tempo, rhythm) with concrete improvement tips – including the alternative genres the analysis heard. Tips can be turned into Session ToDos with one click.
 - **Reference track analysis:** load a WAV/MP3/FLAC/AIFF/OGG reference in Song Vision; BPM, key, chords and moods are suggested, and a general diagnosis compares it with your own song.
 - **Reference player:** Play/Pause/Stop right next to the reference field to listen while you note moods or ideas (mixed into the plugin output after the analysis tap).
