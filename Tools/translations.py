@@ -333,6 +333,14 @@ EN = {
     'player_pause': 'Pause',
     'player_play': 'Play reference track',
     'player_stop': 'Stop (back to the start)',
+    'update_btn': 'Update %s available',
+    'update_tooltip': 'DAW Notes %s has been released – click to download',
+    'update_installed': 'Installed: %s',
+    'update_menu_title': 'DAW Notes %s has been released',
+    'update_open_download': 'Open download page …',
+    'update_hide': 'Hide until next start',
+    'update_disable': 'Stop checking for updates',
+    'update_toggle': 'Check for updates once a day (GitHub)',
 }
 
 FR = {
@@ -620,6 +628,14 @@ FR = {
     'player_pause': 'Pause',
     'player_play': 'Écouter le morceau de référence',
     'player_stop': 'Stop (retour au début)',
+    'update_btn': 'Mise à jour %s disponible',
+    'update_tooltip': 'DAW Notes %s est disponible – cliquer pour télécharger',
+    'update_installed': 'Installée : %s',
+    'update_menu_title': 'DAW Notes %s est disponible',
+    'update_open_download': 'Ouvrir la page de téléchargement …',
+    'update_hide': "Masquer jusqu'au prochain démarrage",
+    'update_disable': 'Ne plus rechercher de mises à jour',
+    'update_toggle': 'Rechercher des mises à jour une fois par jour (GitHub)',
 }
 
 if __name__ == '__main__':

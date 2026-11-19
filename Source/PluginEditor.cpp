@@ -148,6 +148,15 @@ DawNotesAudioProcessorEditor::DawNotesAudioProcessorEditor(DawNotesAudioProcesso
     aboutButton.setColour(juce::TextButton::textColourOffId, juce::Colours::orange);
     aboutButton.onClick = [this] { showAbout(); };
     contentComponent.addAndMakeVisible(aboutButton);
+
+    // Update-Hinweis (zuletzt bekanntes Ergebnis sofort, ein neues kommt über den Timer)
+    updateButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff2f9e44));
+    updateButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+    updateButton.onClick = [this] { showUpdateMenu(); };
+    contentComponent.addChildComponent(updateButton);
+    refreshUpdateHint();
+    startTimer(2000);
+
     updateTabEnableState();
 
     updateInstructionText(0);
@@ -158,7 +167,43 @@ DawNotesAudioProcessorEditor::DawNotesAudioProcessorEditor(DawNotesAudioProcesso
 
 DawNotesAudioProcessorEditor::~DawNotesAudioProcessorEditor()
 {
+    stopTimer();
     tabs.clearTabs();
+}
+
+void DawNotesAudioProcessorEditor::timerCallback()
+{
+    refreshUpdateHint();
+}
+
+void DawNotesAudioProcessorEditor::refreshUpdateHint()
+{
+    const auto v = updateCheck->newerVersion();
+    if (v == shownUpdate && updateButton.isVisible() == v.isNotEmpty()) return;
+    shownUpdate = v;
+    updateButton.setButtonText(tr("update_btn", "Update %s verfügbar").replace("%s", v));
+    updateButton.setTooltip(tr("update_tooltip", "DAW Notes %s ist erschienen – klicken für den Download").replace("%s", v)
+                            + "\n" + tr("update_installed", "Installiert: %s").replace("%s", JucePlugin_VersionString));
+    updateButton.setVisible(v.isNotEmpty());
+    resized();
+}
+
+void DawNotesAudioProcessorEditor::showUpdateMenu()
+{
+    juce::PopupMenu m;
+    m.addSectionHeader(tr("update_menu_title", "DAW Notes %s ist erschienen").replace("%s", shownUpdate));
+    m.addItem(1, tr("update_open_download", "Download-Seite öffnen …"));
+    m.addItem(2, tr("update_hide", "Bis zum nächsten Start ausblenden"));
+    m.addSeparator();
+    m.addItem(3, tr("update_disable", "Nicht mehr nach Updates suchen"));
+    m.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(updateButton),
+        [safe = juce::Component::SafePointer<DawNotesAudioProcessorEditor>(this)](int r) {
+            if (safe == nullptr || r == 0) return;
+            if (r == 1) juce::URL(UpdateCheck::kReleasesUrl).launchInDefaultBrowser();
+            else if (r == 2) safe->updateCheck->dismiss();
+            else if (r == 3) safe->updateCheck->setEnabled(false);
+            safe->refreshUpdateHint();
+        });
 }
 
 void DawNotesAudioProcessorEditor::showAbout()
@@ -310,6 +355,13 @@ void DawNotesAudioProcessorEditor::resized()
     area.removeFromTop(60); // Header GIF Platz
 
     auto songLabelArea = area.removeFromTop(34).reduced(10, 2);
+    if (updateButton.isVisible())
+    {
+        // Gleich breit links freihalten, damit der Songtitel mittig bleibt
+        auto btn = songLabelArea.removeFromRight(180).reduced(0, 3);
+        songLabelArea.removeFromLeft(180);
+        updateButton.setBounds(btn);
+    }
     activeSongHeaderLabel.setBounds(songLabelArea);
 
     // Unteren Hilfebereich (85px) in Kurzanleitung + PDF-Link-Button aufteilen

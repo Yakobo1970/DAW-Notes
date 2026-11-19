@@ -21,7 +21,7 @@ namespace BinaryData
     const int            header_banner_gifSize = 127257;
 
     extern const char*   set_german_ini;
-    const int            set_german_iniSize = 18729;
+    const int            set_german_iniSize = 19119;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
     const int namedResourceListSize = 5;

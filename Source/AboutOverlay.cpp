@@ -56,6 +56,13 @@ AboutOverlay::AboutOverlay()
     websiteButton.onClick = [] { juce::URL(websiteUrl).launchInDefaultBrowser(); };
     addAndMakeVisible(websiteButton);
 
+    updateToggle.setButtonText(tr("update_toggle", "Einmal am Tag nach Updates suchen (GitHub)"));
+    updateToggle.setColour(juce::ToggleButton::textColourId, juce::Colour(0xffaaaaaa));
+    updateToggle.setColour(juce::ToggleButton::tickColourId, accent);
+    updateToggle.setToggleState(updateCheck->enabled(), juce::dontSendNotification);
+    updateToggle.onClick = [this] { updateCheck->setEnabled(updateToggle.getToggleState()); };
+    addAndMakeVisible(updateToggle);
+
     setWantsKeyboardFocus(true);
     startTimerHz(40);
 }
@@ -153,6 +160,8 @@ void AboutOverlay::resized()
     auto area = panel.reduced(20, 16);
     area.removeFromTop(74 + 14);
 
+    updateToggle.setBounds(area.removeFromBottom(24).withSizeKeepingCentre(360, 24));
+    area.removeFromBottom(6);
     auto buttons = area.removeFromBottom(34);
     area.removeFromBottom(24);
     storyArea = area;

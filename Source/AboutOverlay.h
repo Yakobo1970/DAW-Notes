@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "UpdateCheck.h"
 
 // "Über DAW Notes": Overlay mit langsam scrollender Entstehungsgeschichte und Links
 class AboutOverlay : public juce::Component, private juce::Timer
@@ -36,6 +37,8 @@ private:
     juce::TextButton closeButton;
     juce::TextButton donateButton;
     juce::TextButton websiteButton;
+    juce::ToggleButton updateToggle;
+    juce::SharedResourcePointer<UpdateCheck> updateCheck;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AboutOverlay)
 };

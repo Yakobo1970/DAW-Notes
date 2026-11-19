@@ -9,6 +9,10 @@ Last but not least, you can also have your song to-do sheet printed out as HTML 
 
 DAW Notes does not access any data from the DAW and is located locally on your studio PC, is absolutely free and intended as a little helper for me and you.
 
+## What's new in 2.0.1
+
+- **Update hint:** DAW Notes checks GitHub for a newer release at most once a day in the background. When one is out, a green *Update x available* button appears in the song bar (open the download page, hide it until the next start, or switch the check off). The check can be switched on and off in *About DAW Notes*; nothing but the request itself is sent.
+
 ## What's new in 2.0.0
 
 ![Song Vision](docs/screenshots/daw-notes-2-song-vision.png)

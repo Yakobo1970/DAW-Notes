@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=DAW Notes
-AppVersion=2.0.0
+AppVersion=2.0.1
 AppPublisher=Un(d)AbtanzBAR
 AppPublisherURL=https://www.undabtanzbar.de
 DefaultDirName={autopf}\DAW Notes
@@ -11,7 +11,7 @@ DefaultGroupName=DAW Notes
 UninstallDisplayIcon={app}\DAW Notes.exe
 Compression=lzma2
 SolidCompression=yes
-OutputBaseFilename=DAW_Notes_Setup_v2.0.0
+OutputBaseFilename=DAW_Notes_Setup_v2.0.1
 OutputDir=Output
 
 ; WICHTIG: Erzwingt die Installation in den echten 64-Bit "Program Files"-Ordner

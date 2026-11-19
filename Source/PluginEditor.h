@@ -7,6 +7,7 @@
 #include "AnalysisView.h"
 #include "AboutOverlay.h"
 #include "ToDoView.h"
+#include "UpdateCheck.h"
 
 class DawNotesAudioProcessorEditor;
 
@@ -36,7 +37,7 @@ public:
     }
 };
 
-class DawNotesAudioProcessorEditor : public juce::AudioProcessorEditor
+class DawNotesAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer
 {
 public:
     DawNotesAudioProcessorEditor(DawNotesAudioProcessor&);
@@ -72,6 +73,14 @@ private:
     juce::TextButton aboutButton;
     std::unique_ptr<AboutOverlay> aboutOverlay;
     void showAbout();
+
+    // Update-Hinweis: grüner Knopf rechts in der Song-Zeile, sobald GitHub ein neueres Release meldet
+    juce::SharedResourcePointer<UpdateCheck> updateCheck;
+    juce::TextButton updateButton;
+    juce::String shownUpdate;
+    void refreshUpdateHint();
+    void showUpdateMenu();
+    void timerCallback() override;
 
     int64_t activeSongId = -1;
 

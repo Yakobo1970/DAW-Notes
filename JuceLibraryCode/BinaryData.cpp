@@ -24483,6 +24483,14 @@ static const unsigned char temp_binary_data_4[] =
 "todo_input_placeholder=Neue Aufgabe \xe2\x80\xa6 (Enter \xc3\xbc""bernimmt)\r\n"
 "todo_status_done=Erledigt\r\n"
 "todo_status_open=Offen\r\n"
+"update_btn=Update %s verf\xc3\xbcgbar\r\n"
+"update_disable=Nicht mehr nach Updates suchen\r\n"
+"update_hide=Bis zum n\xc3\xa4""chsten Start ausblenden\r\n"
+"update_installed=Installiert: %s\r\n"
+"update_menu_title=DAW Notes %s ist erschienen\r\n"
+"update_open_download=Download-Seite \xc3\xb6""ffnen \xe2\x80\xa6\r\n"
+"update_toggle=Einmal am Tag nach Updates suchen (GitHub)\r\n"
+"update_tooltip=DAW Notes %s ist erschienen \xe2\x80\x93 klicken f\xc3\xbcr den Download\r\n"
 "vision_abbrechen=Abbrechen\r\n"
 "vision_analysiere=Analysiere \xe2\x80\xa6 \r\n"
 "vision_aus=Aus \"\r\n"
@@ -24519,7 +24527,7 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
         case 0x6567d151:  numBytes = 145999; return dawnotes_png;
         case 0xae93b283:  numBytes = 4286; return dawnnotes_ico;
         case 0x94871123:  numBytes = 127257; return header_banner_gif;
-        case 0x8a4ae1a8:  numBytes = 18729; return set_german_ini;
+        case 0x8a4ae1a8:  numBytes = 19119; return set_german_ini;
         default: break;
     }
 

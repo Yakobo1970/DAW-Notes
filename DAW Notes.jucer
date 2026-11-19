@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="zLCsAN" name="DAW Notes" version="2.0.0" projectType="audioplug" useAppConfig="0"
+<JUCERPROJECT id="zLCsAN" name="DAW Notes" version="2.0.1" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" bundleIdentifier="de.undabtanzbar.DAWNotes"
               pluginFormats="buildAU,buildStandalone,buildVST3" pluginDesc="Notizblock f&#252;r DAW-User"
               pluginManufacturer="undabtanzbar" pluginVST3Category="Analyzer,Tools"
@@ -50,6 +50,8 @@
       <FILE id="Kq3aZ6" name="AnalysisView.h" compile="0" resource="0" file="Source/AnalysisView.h"/>
       <FILE id="Kq3aZ7" name="AboutOverlay.cpp" compile="1" resource="0" file="Source/AboutOverlay.cpp"/>
       <FILE id="Kq3aZ8" name="AboutOverlay.h" compile="0" resource="0" file="Source/AboutOverlay.h"/>
+      <FILE id="UpdChk1" name="UpdateCheck.cpp" compile="1" resource="0" file="Source/UpdateCheck.cpp"/>
+      <FILE id="UpdChk2" name="UpdateCheck.h" compile="0" resource="0" file="Source/UpdateCheck.h"/>
       <FILE id="Kq3aZ9" name="GhostArrangement.cpp" compile="1" resource="0" file="Source/GhostArrangement.cpp"/>
       <FILE id="Kq3aZA" name="GhostArrangement.h" compile="0" resource="0" file="Source/GhostArrangement.h"/>
       <FILE id="Kq3aZ9" name="set_german.ini" compile="0" resource="1" file="Resources/Languages/set_german.ini"/>
@@ -87,20 +89,20 @@
         <CONFIGURATION isDebug="0" name="Release" targetName="DAW Notes" defines="JUCE_STANDALONE_FILTER_WINDOW_USE_PLUGIN_AUDIO_PROCESSOR_METHODS=1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_plugin_client" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors_headless" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_dsp" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="C:/Users/webma/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="C:/Users/webma/JUCE/modules"/>
       </MODULEPATHS>
     </VS2026>
   </EXPORTFORMATS>
